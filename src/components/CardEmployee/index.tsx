@@ -7,7 +7,24 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 
-export function CardEmployee() {
+interface CardEmployeeProps {
+  name: string;
+  email: string;
+  phone: string;
+  profession: string;
+  dataHiring: Date | string;
+  dataBirth?: Date;
+  salary: string;
+}
+export function CardEmployee({
+  name,
+  email,
+  phone,
+  profession,
+  dataHiring,
+  dataBirth,
+  salary,
+}: CardEmployeeProps) {
   return (
     <Card
       sx={{
@@ -40,7 +57,7 @@ export function CardEmployee() {
             fontWeight={'bold'}
             color={'primary.contrastText'}
           >
-            Wesley Rodrigues
+            {name}
           </Typography>
           <Typography
             gutterBottom
@@ -53,7 +70,7 @@ export function CardEmployee() {
             marginBottom={2}
             color={'primary.contrastText'}
           >
-            Desenvolvedor Frontend
+            {profession}
           </Typography>
         </Grid>
         <Grid
@@ -79,7 +96,7 @@ export function CardEmployee() {
             textAlign={'justify'}
             marginLeft={1}
           >
-            wesley@teste.com
+            {email}
           </Typography>
         </Grid>
         <Grid
@@ -105,7 +122,7 @@ export function CardEmployee() {
             textAlign={'justify'}
             marginLeft={1}
           >
-            (12)998765432
+            {phone}
           </Typography>
         </Grid>
         <Grid
@@ -131,7 +148,7 @@ export function CardEmployee() {
             textAlign={'justify'}
             marginLeft={1}
           >
-            {`R$ 5.000,00`}
+            {`R$ ${salary}`}
           </Typography>
         </Grid>
         <Grid
@@ -157,7 +174,7 @@ export function CardEmployee() {
             textAlign={'justify'}
             marginLeft={1}
           >
-            01/09/2022
+            {dataHiring.toString()}
           </Typography>
         </Grid>
       </CardContent>
