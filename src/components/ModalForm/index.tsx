@@ -1,10 +1,6 @@
-import AddIcon from '@mui/icons-material/Add';
 import {
   Button,
   FormControl,
-  InputAdornment,
-  InputLabel,
-  OutlinedInput,
   Stack,
   TextField,
   Typography,
@@ -15,8 +11,10 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs, { Dayjs } from 'dayjs';
-import * as React from 'react';
-
+import { Formik } from 'formik';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { useEmployee } from '~/hooks/employee';
+import { AddNewEmployeeShema } from '~/schemas/NewEmployee';
 const style = {
   position: 'absolute' as 'absolute',
   top: '50%',
@@ -29,104 +27,217 @@ const style = {
   boxShadow: 24,
   p: 4,
 };
+interface Props {
+  dataEdit: any;
+  dataEmployee: any;
+  setNewEmployee: Dispatch<SetStateAction<never[]>> | any;
+  setEmployeeEdit: Dispatch<SetStateAction<never[]>> | any;
+  onOpen: boolean;
+  onClose: () => void;
+}
+export function ModalForm({
+  dataEmployee,
+  setNewEmployee,
+  dataEdit,
+  setEmployeeEdit,
+  onOpen,
+  onClose,
+}: Props) {
+  const { employees, setEmployees } = useEmployee();
 
-export function ModalForm() {
-  const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
-
-  const [value, setValue] = React.useState<Dayjs | null>(
+  const [value, setValue] = useState<Dayjs | null>(
     dayjs('2014-08-18T21:11:54'),
   );
 
   const handleChange = (newValue: Dayjs | null) => {
     setValue(newValue);
   };
+
+  async function createNewEmployee(data: any) {
+    console.log('user', data);
+    // console.log('Aqui', employees);
+    // const newmEmployee = [...employees, data];
+    // setEmployees(newmEmployee);
+
+    if (Object.keys(dataEdit).length) {
+      dataEmployee[dataEdit.index] = data;
+    }
+    const newDataArray = !Object.keys(dataEdit).length
+      ? [...(dataEmployee ? dataEmployee : []), data]
+      : [...(dataEmployee ? dataEmployee : [])];
+
+    localStorage.setItem('Employee@Seven', JSON.stringify(newDataArray));
+    console.log('newDataArray', newDataArray);
+
+    setNewEmployee(newDataArray);
+    setEmployeeEdit(data);
+    onClose();
+  }
+  const initialValues = {
+    name: '',
+    email: '',
+    phone: '',
+    dataHiring: Date(),
+    dataBirth: Date(),
+    salary: '',
+  };
+
   return (
     <div>
-      <Button
-        variant="contained"
-        onClick={handleOpen}
-        color="secondary"
-        endIcon={<AddIcon />}
-      >
-        Adicionar Funcionários
-      </Button>
       <Modal
-        open={open}
-        onClose={handleClose}
+        open={onOpen}
+        onClose={onClose}
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
         <Box sx={style}>
-          <Box
-            component="form"
-            sx={{
-              '& > :not(style)': { m: 1, width: '20ch' },
-            }}
-            noValidate
-            autoComplete="off"
+          <Formik
+            initialValues={initialValues}
+            validationSchema={AddNewEmployeeShema}
+            onSubmit={createNewEmployee}
           >
-            <Typography
-              gutterBottom
-              variant="h1"
-              component="h1"
-              fontSize={20}
-              textAlign="center"
-              fontWeight={'bold'}
-              color={'primary.main'}
-            >
-              Detalhes do funcionário
-            </Typography>
-            <TextField id="outlined-basic" label="Nome" variant="outlined" />
-            <TextField id="outlined-basic" label="E-mail" variant="outlined" />
-            <TextField
-              id="outlined-basic"
-              label="Telefone"
-              variant="outlined"
-            />
-            <LocalizationProvider dateAdapter={AdapterDayjs}>
-              <DesktopDatePicker
-                label="Data de Nascimento"
-                inputFormat="MM/DD/YYYY"
-                value={value}
-                onChange={handleChange}
-                renderInput={(params) => <TextField {...params} />}
-              />
-            </LocalizationProvider>
-          </Box>
-          <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <FormControl fullWidth sx={{ m: 1 }}>
-              <DesktopDatePicker
-                label="Data de Contração"
-                inputFormat="MM/DD/YYYY"
-                value={value}
-                onChange={handleChange}
-                renderInput={(params) => <TextField {...params} />}
-              />
-            </FormControl>
-          </LocalizationProvider>
-          <FormControl fullWidth sx={{ m: 1 }}>
-            <InputLabel htmlFor="outlined-adornment-amount">Salário</InputLabel>
-            <OutlinedInput
-              id="outlined-adornment-amount"
-              // value={values.amount}
-              // onChange={handleChange('amount')}
-              startAdornment={
-                <InputAdornment position="start">R$</InputAdornment>
-              }
-              label="Amount"
-            />
-          </FormControl>
+            {(formik) => {
+              return (
+                <form onSubmit={formik.handleSubmit}>
+                  <Box
+                    component="div"
+                    sx={{
+                      '& > :not(style)': { m: 1, width: '20ch' },
+                    }}
+                    // noValidate
+                    // autoComplete="off"
+                  >
+                    <Typography
+                      gutterBottom
+                      variant="h1"
+                      component="h1"
+                      fontSize={20}
+                      textAlign="center"
+                      fontWeight={'bold'}
+                      color={'primary.main'}
+                    >
+                      Detalhes do funcionário
+                    </Typography>
 
-          <Stack direction="row" spacing={2} sx={{ m: 1 }}>
-            <Button variant="contained" color="success">
-              Concluido
-            </Button>
-            <Button variant="outlined" color="success">
-              Voltar
-            </Button>
-          </Stack>
+                    <TextField
+                      id="name"
+                      name="name"
+                      label="Nome"
+                      variant="outlined"
+                      value={formik.values.name}
+                      onChange={formik.handleChange}
+                      error={formik.touched.name && Boolean(formik.errors.name)}
+                      helperText={formik.touched.name && formik.errors.name}
+                    />
+                    <TextField
+                      id="email"
+                      name="email"
+                      type={'email'}
+                      label="E-mail"
+                      variant="outlined"
+                      value={formik.values.email}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched.email && Boolean(formik.errors.email)
+                      }
+                      helperText={formik.touched.email && formik.errors.email}
+                    />
+                    <TextField
+                      id="phone"
+                      name="phone"
+                      label="Telefone"
+                      variant="outlined"
+                      value={formik.values.phone}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched.phone && Boolean(formik.errors.phone)
+                      }
+                      helperText={formik.touched.phone && formik.errors.phone}
+                    />
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <DesktopDatePicker
+                        label="Data de Nascimento"
+                        inputFormat="MM/DD/YYYY"
+                        value={formik.values.dataBirth}
+                        onChange={(value) =>
+                          formik.setFieldValue('date', value)
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            id="dataBirth"
+                            name="dataBirth"
+                            error={
+                              formik.touched.dataBirth &&
+                              Boolean(formik.errors.dataBirth)
+                            }
+                            helperText={
+                              formik.touched.dataBirth &&
+                              formik.errors.dataBirth
+                            }
+                            {...params}
+                          />
+                        )}
+                      />
+                    </LocalizationProvider>
+                  </Box>
+                  <LocalizationProvider dateAdapter={AdapterDayjs}>
+                    <FormControl fullWidth sx={{ m: 1 }}>
+                      <DesktopDatePicker
+                        label="Data de Contração"
+                        inputFormat="MM/DD/YYYY"
+                        value={formik.values.dataHiring}
+                        onChange={(value) =>
+                          formik.setFieldValue('date', value)
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            id="dataHiring"
+                            name="dataHiring"
+                            error={
+                              formik.touched.dataHiring &&
+                              Boolean(formik.errors.dataHiring)
+                            }
+                            helperText={
+                              formik.touched.dataHiring &&
+                              formik.errors.dataHiring
+                            }
+                            {...params}
+                          />
+                        )}
+                      />
+                    </FormControl>
+                  </LocalizationProvider>
+                  <FormControl fullWidth sx={{ m: 1 }}>
+                    <TextField
+                      id="salary"
+                      name="salary"
+                      type="string"
+                      value={formik.values.salary}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched.salary && Boolean(formik.errors.salary)
+                      }
+                      helperText={formik.touched.salary && formik.errors.salary}
+                      label="Salário"
+                    />
+                  </FormControl>
+
+                  <Stack direction="row" spacing={2} sx={{ m: 1 }}>
+                    <Button variant="contained" color="primary" type="submit">
+                      Concluido
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      onClick={onClose}
+                    >
+                      Voltar
+                    </Button>
+                  </Stack>
+                </form>
+              );
+            }}
+          </Formik>
         </Box>
       </Modal>
     </div>
