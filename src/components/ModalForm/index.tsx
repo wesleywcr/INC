@@ -70,7 +70,6 @@ export function ModalForm({
       id: uuidv4(),
       ...data,
     };
-    console.log('user', dataform);
 
     if (Object.keys(dataEdit).length) {
       dataEmployee[dataEdit.index] = dataform;
@@ -80,7 +79,6 @@ export function ModalForm({
       : [...(dataEmployee ? dataEmployee : [])];
 
     await localStorage.setItem('Employee@Seven', JSON.stringify(newDataArray));
-    console.log('newDataArray', newDataArray);
 
     setNewEmployee(newDataArray);
     setEmployeeEdit(data);
