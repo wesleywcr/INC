@@ -13,7 +13,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import dayjs, { Dayjs } from 'dayjs';
 import { Formik } from 'formik';
 import { Dispatch, SetStateAction, useState } from 'react';
-import { useEmployee } from '~/hooks/employee';
+import { v4 as uuidv4 } from 'uuid';
+import { IEmployee } from '~/Models/Employee';
 import { AddNewEmployeeShema } from '~/schemas/NewEmployee';
 const style = {
   position: 'absolute' as 'absolute',
@@ -32,6 +33,7 @@ interface Props {
   dataEmployee: any;
   setNewEmployee: Dispatch<SetStateAction<never[]>> | any;
   setEmployeeEdit: Dispatch<SetStateAction<never[]>> | any;
+  employeeEdit: boolean;
   onOpen: boolean;
   onClose: () => void;
 }
@@ -40,43 +42,57 @@ export function ModalForm({
   setNewEmployee,
   dataEdit,
   setEmployeeEdit,
+  employeeEdit,
   onOpen,
   onClose,
 }: Props) {
-  const { employees, setEmployees } = useEmployee();
+  const [datePicker, setDatePicker] = useState<Dayjs | null>(dayjs());
 
-  const [value, setValue] = useState<Dayjs | null>(
-    dayjs('2014-08-18T21:11:54'),
-  );
+  async function editNewEmployee(data: any) {
+    const newData = dataEmployee.filter((listEmployee: IEmployee) => {
+      return listEmployee.id !== dataEdit?.id;
+    });
+    const dataform = [
+      ...newData,
+      {
+        id: dataEdit.id,
+        ...data,
+      },
+    ];
 
-  const handleChange = (newValue: Dayjs | null) => {
-    setValue(newValue);
-  };
-
+    await localStorage.setItem('Employee@Seven', JSON.stringify(dataform));
+    setNewEmployee(dataform);
+    onClose();
+    window.location.reload();
+  }
   async function createNewEmployee(data: any) {
-    console.log('user', data);
-    // console.log('Aqui', employees);
-    // const newmEmployee = [...employees, data];
-    // setEmployees(newmEmployee);
+    const dataform = {
+      id: uuidv4(),
+      ...data,
+    };
+    console.log('user', dataform);
 
     if (Object.keys(dataEdit).length) {
-      dataEmployee[dataEdit.index] = data;
+      dataEmployee[dataEdit.index] = dataform;
     }
     const newDataArray = !Object.keys(dataEdit).length
-      ? [...(dataEmployee ? dataEmployee : []), data]
+      ? [...(dataEmployee ? dataEmployee : []), dataform]
       : [...(dataEmployee ? dataEmployee : [])];
 
-    localStorage.setItem('Employee@Seven', JSON.stringify(newDataArray));
+    await localStorage.setItem('Employee@Seven', JSON.stringify(newDataArray));
     console.log('newDataArray', newDataArray);
 
     setNewEmployee(newDataArray);
     setEmployeeEdit(data);
     onClose();
+    window.location.reload();
   }
   const initialValues = {
     name: '',
+    lastName: '',
     email: '',
     phone: '',
+    profession: '',
     dataHiring: Date(),
     dataBirth: Date(),
     salary: '',
@@ -94,9 +110,22 @@ export function ModalForm({
           <Formik
             initialValues={initialValues}
             validationSchema={AddNewEmployeeShema}
-            onSubmit={createNewEmployee}
+            onSubmit={employeeEdit ? editNewEmployee : createNewEmployee}
           >
             {(formik) => {
+              const editEmployee = () => {
+                formik.setValues({
+                  name: dataEdit.name,
+                  lastName: dataEdit.lastName,
+                  email: dataEdit.email,
+                  phone: dataEdit.phone,
+                  profession: dataEdit.profession,
+                  dataHiring: Date(),
+                  dataBirth: Date(),
+                  salary: dataEdit.salary,
+                });
+              };
+
               return (
                 <form onSubmit={formik.handleSubmit}>
                   <Box
@@ -104,8 +133,6 @@ export function ModalForm({
                     sx={{
                       '& > :not(style)': { m: 1, width: '20ch' },
                     }}
-                    // noValidate
-                    // autoComplete="off"
                   >
                     <Typography
                       gutterBottom
@@ -130,6 +157,21 @@ export function ModalForm({
                       helperText={formik.touched.name && formik.errors.name}
                     />
                     <TextField
+                      id="lastName"
+                      name="lastName"
+                      label="Sobrenome"
+                      variant="outlined"
+                      value={formik.values.lastName}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched.lastName &&
+                        Boolean(formik.errors.lastName)
+                      }
+                      helperText={
+                        formik.touched.lastName && formik.errors.lastName
+                      }
+                    />
+                    <TextField
                       id="email"
                       name="email"
                       type={'email'}
@@ -145,6 +187,7 @@ export function ModalForm({
                     <TextField
                       id="phone"
                       name="phone"
+                      type={'number'}
                       label="Telefone"
                       variant="outlined"
                       value={formik.values.phone}
@@ -154,41 +197,33 @@ export function ModalForm({
                       }
                       helperText={formik.touched.phone && formik.errors.phone}
                     />
-                    <LocalizationProvider dateAdapter={AdapterDayjs}>
-                      <DesktopDatePicker
-                        label="Data de Nascimento"
-                        inputFormat="MM/DD/YYYY"
-                        value={formik.values.dataBirth}
-                        onChange={(value) =>
-                          formik.setFieldValue('date', value)
-                        }
-                        renderInput={(params) => (
-                          <TextField
-                            id="dataBirth"
-                            name="dataBirth"
-                            error={
-                              formik.touched.dataBirth &&
-                              Boolean(formik.errors.dataBirth)
-                            }
-                            helperText={
-                              formik.touched.dataBirth &&
-                              formik.errors.dataBirth
-                            }
-                            {...params}
-                          />
-                        )}
-                      />
-                    </LocalizationProvider>
                   </Box>
+                  <FormControl fullWidth sx={{ m: 1 }}>
+                    <TextField
+                      id="profession"
+                      name="profession"
+                      label="Cargo"
+                      variant="outlined"
+                      value={formik.values.profession}
+                      onChange={formik.handleChange}
+                      error={
+                        formik.touched.profession &&
+                        Boolean(formik.errors.profession)
+                      }
+                      helperText={
+                        formik.touched.profession && formik.errors.profession
+                      }
+                    />
+                  </FormControl>
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <FormControl fullWidth sx={{ m: 1 }}>
                       <DesktopDatePicker
                         label="Data de Contração"
-                        inputFormat="MM/DD/YYYY"
-                        value={formik.values.dataHiring}
-                        onChange={(value) =>
-                          formik.setFieldValue('date', value)
-                        }
+                        inputFormat="DD/MM/YYYY"
+                        value={datePicker}
+                        onChange={(newValue) => {
+                          setDatePicker(newValue);
+                        }}
                         renderInput={(params) => (
                           <TextField
                             id="dataHiring"
@@ -233,6 +268,15 @@ export function ModalForm({
                     >
                       Voltar
                     </Button>
+                    {employeeEdit && (
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={editEmployee}
+                      >
+                        Editar
+                      </Button>
+                    )}
                   </Stack>
                 </form>
               );
