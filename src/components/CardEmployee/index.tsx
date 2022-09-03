@@ -1,35 +1,47 @@
 import CreateIcon from '@mui/icons-material/Create';
 import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Avatar, Box, Button, Grid, Stack } from '@mui/material';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import Typography from '@mui/material/Typography';
 
-interface CardEmployeeProps {
+export interface ContentProps {
   name: string;
+  lastName: string;
   email: string;
   phone: string;
-  profession: string;
-  dataHiring: Date | string;
-  dataBirth?: Date;
+  profession?: string;
+  dataHiring: Date;
   salary: string;
+  OnDelete: () => void;
+  OnEdit: () => void;
 }
 export function CardEmployee({
   name,
+  lastName,
   email,
   phone,
   profession,
   dataHiring,
-  dataBirth,
   salary,
-}: CardEmployeeProps) {
+  OnEdit,
+  OnDelete,
+}: ContentProps) {
+  const date = new Intl.DateTimeFormat('pt-Br').format(
+    Date.parse(String(dataHiring)),
+  );
+
+  const salaryFormated = Number(salary).toLocaleString('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  });
+
   return (
     <Card
       sx={{
-        maxWidth: 340,
-        height: 370,
+        maxWidth: 350,
+        height: 380,
         backgroundColor: 'secondary.main',
         borderRadius: 5,
         boxShadow: '5px 3px 3px #242424',
@@ -38,10 +50,7 @@ export function CardEmployee({
     >
       <CardContent sx={{ padding: 4 }}>
         <Box marginLeft={15}>
-          <Avatar
-            alt="funcionário"
-            src="https://avatars.githubusercontent.com/u/60634942?v=4"
-          />
+          <Avatar sx={{ bgcolor: 'primary.main' }}>{name.charAt(0)}</Avatar>
         </Box>
         <Grid
           container
@@ -57,8 +66,9 @@ export function CardEmployee({
             fontWeight={'bold'}
             color={'primary.contrastText'}
           >
-            {name}
+            {`${name} ${lastName}`}
           </Typography>
+
           <Typography
             gutterBottom
             variant="h1"
@@ -148,7 +158,7 @@ export function CardEmployee({
             textAlign={'justify'}
             marginLeft={1}
           >
-            {`R$ ${salary}`}
+            {salaryFormated}
           </Typography>
         </Grid>
         <Grid
@@ -174,7 +184,7 @@ export function CardEmployee({
             textAlign={'justify'}
             marginLeft={1}
           >
-            {dataHiring.toString()}
+            {date}
           </Typography>
         </Grid>
       </CardContent>
@@ -197,19 +207,7 @@ export function CardEmployee({
               width: '60px',
               border: '1px solid #000',
             }}
-          >
-            <VisibilityIcon />
-          </Button>
-          <Button
-            color="primary"
-            variant="contained"
-            style={{
-              borderRadius: '50%',
-              backgroundColor: 'primary.light',
-              height: '60px',
-              width: '60px',
-              border: '1px solid #000',
-            }}
+            onClick={OnEdit}
           >
             <CreateIcon />
           </Button>
@@ -224,6 +222,7 @@ export function CardEmployee({
               width: '60px',
               border: '1px solid #000',
             }}
+            onClick={OnDelete}
           >
             <DeleteIcon />
           </Button>
